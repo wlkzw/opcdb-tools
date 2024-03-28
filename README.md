@@ -8,6 +8,6 @@ Helper tools for OPC DA data R&W collector
 
 ### 2024-03-28
 
-Initial commit;
-Basic UI interface;
-Tool for import tags with a txt file.
+1. Initial commit;
+2. Basic UI interface;
+3. Tool for import tags with a txt file.
