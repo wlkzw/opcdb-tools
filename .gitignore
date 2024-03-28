@@ -1,0 +1,12 @@
+# folders
+build
+dist
+
+# extensions
+*.sql
+*.spec
+*.txt
+*.log
+
+# special files
+test.py
