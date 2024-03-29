@@ -3,6 +3,7 @@ from PyQt6.QtWidgets import (QMainWindow, QApplication, QPushButton, QFileDialog
                              QWidget, QVBoxLayout, QLabel, QScrollArea, QMessageBox)
 from PyQt6.QtCore import QSize, Qt
 from import_tags import readTagList, importTags
+from sql2csv import sql2csv
 
 class ImportTagsWindow(QWidget):
     def __init__(self):
@@ -70,6 +71,46 @@ class ImportTagsWindow(QWidget):
             else:
                 QMessageBox.critical(self, "Import Failed", msg)
 
+class S2CWindow(QWidget):
+    def __init__(self):
+        super().__init__()
+        self.setWindowTitle("SQL 2 CSV Convert")
+        self.setFixedSize(QSize(400, 400))
+        self.filePath = None
+
+        # 0 - get file
+        self.b_fileDlg = QPushButton("Choose File...")
+        self.b_fileDlg.clicked.connect(self.openFileDlg)
+
+        # 1 - convert
+        self.b_convert = QPushButton("Convert")
+        self.b_convert.clicked.connect(self.convertClicked)
+
+        # window setup
+        layout = QVBoxLayout()
+        layout.addWidget(self.b_fileDlg)
+        layout.addWidget(self.b_convert)
+
+        self.setLayout(layout)
+
+    def openFileDlg(self):
+        fname = QFileDialog.getOpenFileName(
+            self,
+            "Open File",
+            ".",
+            "SQL Files(*.sql)",
+        )
+        
+        self.filePath = fname[0]
+
+    def convertClicked(self):
+        if (self.filePath is None):
+            msg = "No file selected, please check."
+            QMessageBox.critical(self, "Error", msg)
+        else:
+            msg = sql2csv(self.filePath)
+            QMessageBox.information(self, "Convert Success", msg)
+
 class MainWindow(QMainWindow):
     def __init__(self):
         super(MainWindow, self).__init__()
@@ -80,9 +121,12 @@ class MainWindow(QMainWindow):
 
         self.b_importTags = QPushButton("Import Tags")
         self.b_importTags.clicked.connect(self.go2ImportTagsWindow)
+        self.b_s2c = QPushButton("SQL 2 CSV")
+        self.b_s2c.clicked.connect(self.go2s2cWindow)
 
         layout = QVBoxLayout()
         layout.addWidget(self.b_importTags)
+        layout.addWidget(self.b_s2c)
 
         self.mainLayout = QWidget()
         self.mainLayout.setLayout(layout)
@@ -92,6 +136,15 @@ class MainWindow(QMainWindow):
     def go2ImportTagsWindow(self):
         if self.w is None:
             self.w = ImportTagsWindow()
+            self.w.show()
+
+        else:
+            self.w.close()
+            self.w = None
+
+    def go2s2cWindow(self):
+        if self.w is None:
+            self.w = S2CWindow()
             self.w.show()
 
         else:
