@@ -78,6 +78,8 @@ class S2CWindow(QWidget):
         self.setFixedSize(QSize(400, 400))
         self.filePath = None
 
+        self.l_fpath = QLabel("No file selected.")
+
         # 0 - get file
         self.b_fileDlg = QPushButton("Choose File...")
         self.b_fileDlg.clicked.connect(self.openFileDlg)
@@ -89,6 +91,7 @@ class S2CWindow(QWidget):
         # window setup
         layout = QVBoxLayout()
         layout.addWidget(self.b_fileDlg)
+        layout.addWidget(self.l_fpath)
         layout.addWidget(self.b_convert)
 
         self.setLayout(layout)
@@ -102,6 +105,8 @@ class S2CWindow(QWidget):
         )
         
         self.filePath = fname[0]
+
+        self.l_fpath.setText(f"File selected: {self.filePath}")
 
     def convertClicked(self):
         if (self.filePath is None):
