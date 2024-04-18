@@ -1,6 +1,7 @@
 import sys
 from PyQt6.QtWidgets import (QMainWindow, QApplication, QPushButton, QFileDialog,
-                             QWidget, QVBoxLayout, QLabel, QScrollArea, QMessageBox)
+                             QWidget, QVBoxLayout, QLabel, QScrollArea, QMessageBox,
+                             QProgressBar)
 from PyQt6.QtCore import QSize, Qt
 from import_tags import readTagList, importTags
 from sql2csv import sql2csv
@@ -78,7 +79,10 @@ class S2CWindow(QWidget):
         self.setFixedSize(QSize(400, 400))
         self.filePath = None
 
-        self.l_fpath = QLabel("No file selected.")
+        self.l_message = QLabel("No file selected.")
+        self.pbar = QProgressBar(self)
+        self.pbar.setMinimum(0)
+        self.pbar.setMaximum(100)
 
         # 0 - get file
         self.b_fileDlg = QPushButton("Choose File...")
@@ -91,7 +95,8 @@ class S2CWindow(QWidget):
         # window setup
         layout = QVBoxLayout()
         layout.addWidget(self.b_fileDlg)
-        layout.addWidget(self.l_fpath)
+        layout.addWidget(self.l_message)
+        layout.addWidget(self.pbar)
         layout.addWidget(self.b_convert)
 
         self.setLayout(layout)
@@ -105,16 +110,15 @@ class S2CWindow(QWidget):
         )
         
         self.filePath = fname[0]
-
-        self.l_fpath.setText(f"File selected: {self.filePath}")
+        self.l_message.setText(f"File selected: {self.filePath}")
 
     def convertClicked(self):
         if (self.filePath is None):
             msg = "No file selected, please check."
             QMessageBox.critical(self, "Error", msg)
         else:
-            msg = sql2csv(self.filePath)
-            QMessageBox.information(self, "Convert Success", msg)
+            sql2csv(self.filePath, self.pbar, self.l_message)
+            QMessageBox.information(self, "Success", "Conversion completed successfully.")
 
 class MainWindow(QMainWindow):
     def __init__(self):
@@ -155,7 +159,6 @@ class MainWindow(QMainWindow):
         else:
             self.w.close()
             self.w = None
-
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
