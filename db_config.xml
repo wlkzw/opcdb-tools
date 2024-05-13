@@ -1,8 +1,8 @@
 <DB-CONFIG>
     <info>
-        <ip>10.0.0.211</ip>
-        <user>admin</user>
+        <ip>127.0.0.1</ip>
+        <user>root</user>
         <password>123456</password>
-        <database>otol-platform</database>
+        <database>storage</database>
     </info>
 </DB-CONFIG>

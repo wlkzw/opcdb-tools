@@ -17,13 +17,6 @@ file_handler = logging.FileHandler("import_tags_log.log")
 file_handler.setFormatter(formatter)
 logger.addHandler(file_handler)
 
-# define sql
-add_tag = ("INSERT INTO otol_mst_tag_info "
-           "(code, name, io_property, data_type, lower_limit, upper_limit, dcs_position, is_deleted, create_time) "
-           "VALUES (%s, %s, 0, 1, -9999.99, 9999.99, %s, 0, %s)")
-
-clear_table = ("TRUNCATE TABLE otol_mst_tag_info")
-
 def get_db_config(xml_file):
     tree = et.parse(xml_file)
     root = tree.getroot()
@@ -64,39 +57,48 @@ def connect_to_mysql(config, attempts=3, delay=2):
     
     return None
 
-def read_tags(fname):
-    with open(fname, 'r') as f:
-        l_tags = [tag.strip() for tag in f]
+def get_all(cnx, l_tags):
+    sql = ("SELECT tag_code, value, create_time FROM tag_data_received "
+       "WHERE tag_code = %s")
+    length = len(l_tags)
+    for i in range(length - 1):
+        sql = sql + " OR tag_code = %s"
 
-    ret = l_tags
-    logger.info("Tag infomation retrieved.")
-    return ret
-
-def import_main(cnx, l_tags):
     if cnx and cnx.is_connected():
         with cnx.cursor() as cursor:
-            cursor.execute(clear_table)
-            logger.info("Table cleared.")
+            cursor.execute(sql, l_tags)
+            decp= cursor.fetchall()
+            return data
+        
+def get_last(cnx, tag):
+    sql = ("SELECT tag_code, value, create_time FROM tag_data_received "
+       "WHERE tag_code = %s "
+       "ORDER BY id DESC LIMIT 1")
 
-            now = datetime.now()
-            date_time = now.strftime("%Y-%m-%d %H:%M:%S")
-            tag_infos = [(tag, tag, tag, date_time) for tag in l_tags]
+    if cnx and cnx.is_connected():
+        with cnx.cursor() as cursor:
+            cursor.execute(sql, tag)
+            data = cursor.fetchall()
+            return data
+        
+def get_data(cnx, tag, start_time, end_time):
+    sql = ("SELECT tag_code, value, create_time FROM tag_data_received "
+       "WHERE tag_code = %s AND create_time BETWEEN %s AND %s")
 
-            cursor.executemany(add_tag, tag_infos)
-            cnx.commit()
-            ret = f"Import success. {len(l_tags)} tags imported."
-            logger.info(ret)
-
-        return (0, ret)
-    else:
-        ret = "Database connection failed, please check database connection."
-        logger.info(ret)
-        return (1, ret)
-
-def import_tags(fname):
+    if cnx and cnx.is_connected():
+        with cnx.cursor() as cursor:
+            cursor.execute(sql, (tag, start_time, end_time))
+            data = cursor.fetchall()
+            return data
+        
+if __name__ == "__main__":
     config = get_db_config("db_config.xml")
-    cnx = connect_to_mysql(config, attempts=3)
-    li_tags = read_tags(fname)
-    result = import_main(cnx, li_tags)
+    cnx = connect_to_mysql(config)
+    tags = ["3FIC103OP", "3LIC102OP", "3FIC104OP"]
+    data = get_all(cnx, tags)
+    print(data)
+    data = get_last(cnx, [tags[0]])
+    print(data)
+    data = get_data(cnx, tags[0], datetime(2024, 4, 11, 22, 55, 11), datetime(2024, 4, 11, 22, 55, 11))
+    print(data)
     cnx.close()
-    return result
