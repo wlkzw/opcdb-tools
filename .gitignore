@@ -1,6 +1,8 @@
 # folders
 build
 dist
+sql files
+logs
 
 # extensions
 *.sql

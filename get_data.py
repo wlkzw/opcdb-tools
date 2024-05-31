@@ -67,7 +67,7 @@ def get_all(cnx, l_tags):
     if cnx and cnx.is_connected():
         with cnx.cursor() as cursor:
             cursor.execute(sql, l_tags)
-            decp= cursor.fetchall()
+            data= cursor.fetchall()
             return data
         
 def get_last(cnx, tag):
@@ -80,25 +80,59 @@ def get_last(cnx, tag):
             cursor.execute(sql, tag)
             data = cursor.fetchall()
             return data
+
+def get_last_time(cnx, tag):
+    sql = ("SELECT tag_code, value, dcs_collect_time FROM tag_data_received "
+       "WHERE tag_code = %s "
+       "ORDER BY dcs_collect_time DESC LIMIT 1")
+
+    if cnx and cnx.is_connected():
+        with cnx.cursor() as cursor:
+            cursor.execute(sql, tag)
+            data = cursor.fetchall()
+            return data
         
 def get_data(cnx, tag, start_time, end_time):
     sql = ("SELECT tag_code, value, create_time FROM tag_data_received "
        "WHERE tag_code = %s AND create_time BETWEEN %s AND %s")
-
     if cnx and cnx.is_connected():
         with cnx.cursor() as cursor:
             cursor.execute(sql, (tag, start_time, end_time))
             data = cursor.fetchall()
             return data
-        
+
+def get_all_tag(cnx):
+    sql = ("SELECT code FROM otol_mst_tag_info")
+
+    if cnx and cnx.is_connected():
+        with cnx.cursor() as cursor:
+            cursor.execute(sql)
+            data= cursor.fetchall()
+    all_tags = []
+
+    for tags in data:
+        all_tags.append(tags[0])
+    return all_tags
+
+def modify_tagValue(cnx,new_val,tag_code):
+    sql = ("UPDATE tag_data_received SET value = %s WHERE tag_code = %s"
+       )
+    if cnx and cnx.is_connected():
+        with cnx.cursor() as cursor:
+            cursor.execute(sql,(new_val,tag_code))
+        cnx.commit()
+
 if __name__ == "__main__":
     config = get_db_config("db_config.xml")
     cnx = connect_to_mysql(config)
-    tags = ["3FIC103OP", "3LIC102OP", "3FIC104OP"]
-    data = get_all(cnx, tags)
-    print(data)
+    tags = ["PID001"]
+    # modify_tagValue(cnx,5,'3FIC104OD')
+    # data = get_all(cnx, tags)
+    # print(data)
     data = get_last(cnx, [tags[0]])
     print(data)
-    data = get_data(cnx, tags[0], datetime(2024, 4, 11, 22, 55, 11), datetime(2024, 4, 11, 22, 55, 11))
-    print(data)
+    # data = get_data(cnx, tags[0], datetime(2024, 4, 11, 22, 55, 11), datetime(2024, 4, 11, 22, 55, 11))
+    # print(data)
+    # data = get_all_tag(cnx)
+    # print(data)
     cnx.close()
